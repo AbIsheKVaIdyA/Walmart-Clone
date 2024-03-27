@@ -20,6 +20,9 @@ function fetchSearch(searchTerm: string) {
       Authorization:
         "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
     },
+    next:{
+       revalidate:60*60 
+    }
   })
     .then((res) => res.json())
     .then((data) => {
