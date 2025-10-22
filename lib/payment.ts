@@ -231,3 +231,22 @@ export const validatePaymentSession = (sessionId: string): boolean => {
   // In production, this would validate against stored sessions
   return sessionId && sessionId.length === 64;
 };
+
+// Validation functions for API routes
+export const validateAndSanitizeCardNumber = (cardNumber: string): { isValid: boolean; sanitized: string } => {
+  const sanitized = cardNumber.replace(/\D/g, ''); // Remove non-digits
+  const isValid = validateCardNumber(sanitized);
+  return { isValid, sanitized };
+};
+
+export const validateAndSanitizeCVV = (cvv: string, cardNumber: string): { isValid: boolean; sanitized: string } => {
+  const sanitized = cvv.replace(/\D/g, ''); // Remove non-digits
+  const isValid = validateCVV(sanitized, cardNumber);
+  return { isValid, sanitized };
+};
+
+export const validateAndSanitizeAmount = (amount: string): { isValid: boolean; sanitized: number } => {
+  const sanitized = parseFloat(amount.replace(/[^0-9.]/g, ''));
+  const isValid = !isNaN(sanitized) && sanitized > 0 && sanitized <= 10000; // Max $10,000
+  return { isValid, sanitized };
+};

@@ -8,10 +8,9 @@ import { UserRole } from '@/typings/authTypings';
 export default function CompactAuthModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   
-  const { setUser, setAuthenticated } = useFirebaseAuthStore();
+  const { loginWithEmail, signupWithEmail, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuthStore();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -23,63 +22,55 @@ export default function CompactAuthModal() {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    clearError();
+    setLocalError(null);
 
     try {
       let result;
       
       if (isSignUp) {
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
-          setIsLoading(false);
+          setLocalError('Passwords do not match');
           return;
         }
         
-        result = await FirebaseAuthService.signUpWithEmail(
+        result = await signupWithEmail(
           formData.email, 
           formData.password, 
           formData.name, 
           UserRole.CUSTOMER
         );
       } else {
-        result = await FirebaseAuthService.signInWithEmail(formData.email, formData.password);
+        result = await loginWithEmail(formData.email, formData.password);
       }
       
-      if (result.success && result.user) {
-        // Update the store state
-        useFirebaseAuthStore.setState({
-          user: result.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null
-        });
-        
+      if (result.success) {
         // Close the modal
         setIsOpen(false);
         setIsSignUp(false);
         setFormData({ email: '', password: '', name: '', confirmPassword: '' });
       } else {
-        setError(result.error || `${isSignUp ? 'Sign up' : 'Sign in'} failed`);
+        setLocalError(result.error || `${isSignUp ? 'Sign up' : 'Sign in'} failed`);
       }
     } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
+      setLocalError('An unexpected error occurred');
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
+    clearError();
+    setLocalError(null);
 
     try {
-      // Use redirect by default to avoid COOP issues
-      await FirebaseAuthService.signInWithGoogleRedirect();
-      // The page will redirect, so we don't need to handle the result here
+      const result = await loginWithGoogle();
+      if (result.success) {
+        setIsOpen(false);
+        setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+      } else {
+        setLocalError(result.error || 'Google sign-in failed. Please try again.');
+      }
     } catch (err: any) {
-      setError('Google sign-in failed. Please try again.');
-      setIsLoading(false);
+      setLocalError('Google sign-in failed. Please try again.');
     }
   };
 
@@ -107,7 +98,7 @@ export default function CompactAuthModal() {
               setIsOpen(false);
               setIsSignUp(false);
               setFormData({ email: '', password: '', name: '', confirmPassword: '' });
-              setError(null);
+              setLocalError(null);
             }}
             className="text-gray-500 hover:text-gray-700 text-xl"
           >
@@ -198,7 +189,7 @@ export default function CompactAuthModal() {
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp);
-                setError(null);
+                setLocalError(null);
                 setFormData({ email: '', password: '', name: '', confirmPassword: '' });
               }}
               className="text-blue-600 hover:text-blue-800 text-sm"
@@ -207,9 +198,9 @@ export default function CompactAuthModal() {
             </button>
           </div>
           
-          {error && (
+          {(error || localError) && (
             <div className="text-red-500 text-sm text-center">
-              {error}
+              {error || localError}
             </div>
           )}
         </div>

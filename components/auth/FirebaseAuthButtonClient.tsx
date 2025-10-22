@@ -14,10 +14,9 @@ import { Mail, Lock, User, Phone, Chrome } from 'lucide-react';
 export default function FirebaseAuthButtonClient() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('email');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   
-  const { setUser, setAuthenticated } = useFirebaseAuthStore();
+  const { loginWithEmail, signupWithEmail, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuthStore();
 
   // Email/Password form state
   const [emailForm, setEmailForm] = useState({

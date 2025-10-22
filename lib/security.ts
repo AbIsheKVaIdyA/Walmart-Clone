@@ -151,3 +151,51 @@ export const generateCSRFToken = (): string => {
 export const verifyCSRFToken = (token: string, sessionToken: string): boolean => {
   return token === sessionToken;
 };
+
+// User management functions
+export const findUserByEmail = async (email: string): Promise<User | null> => {
+  // This would typically query a database
+  // For now, return null as we're using Firebase for user management
+  return null;
+};
+
+export const findUserById = async (id: string): Promise<User | null> => {
+  // This would typically query a database
+  // For now, return null as we're using Firebase for user management
+  return null;
+};
+
+export const createUser = async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> => {
+  // This would typically create a user in a database
+  // For now, return a mock user as we're using Firebase for user management
+  const user: User = {
+    id: crypto.randomUUID(),
+    ...userData,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  return user;
+};
+
+export const validateUserPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+  return await verifyPassword(password, hashedPassword);
+};
+
+// Security logging functions
+export const logSecurityEvent = (event: string, details: any): void => {
+  console.log(`[SECURITY] ${event}:`, details);
+};
+
+export const detectSuspiciousActivity = (userId: string, activity: string): boolean => {
+  // Simple suspicious activity detection
+  const suspiciousPatterns = ['brute_force', 'multiple_failed_logins', 'unusual_location'];
+  return suspiciousPatterns.some(pattern => activity.includes(pattern));
+};
+
+// Security headers
+export const addSecurityHeaders = (response: Response): Response => {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  return response;
+};

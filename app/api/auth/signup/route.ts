@@ -7,15 +7,16 @@ import {
   validatePasswordStrength,
   validateEmail,
   logSecurityEvent,
-  detectSuspiciousActivity,
   addSecurityHeaders
 } from '@/lib/security';
+import { detectSuspiciousActivity } from '@/lib/securityMiddleware';
+import { UserRole } from '@/typings/authTypings';
 
 export async function POST(request: NextRequest) {
   try {
     // Check for suspicious activity
     if (detectSuspiciousActivity(request)) {
-      logSecurityEvent('SUSPICIOUS_ACTIVITY', { url: request.url }, request);
+      logSecurityEvent('SUSPICIOUS_ACTIVITY', { url: request.url });
       return NextResponse.json(
         { success: false, error: 'Request blocked for security reasons' },
         { status: 403 }
@@ -63,9 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = findUserByEmail(email);
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      logSecurityEvent('DUPLICATE_SIGNUP_ATTEMPT', { email }, request);
+      logSecurityEvent('DUPLICATE_SIGNUP_ATTEMPT', { email });
       return NextResponse.json(
         { success: false, error: 'User already exists with this email' },
         { status: 409 }
@@ -73,14 +74,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user
-    const newUser = await createUser(email, password, sanitizedName, role);
+    const newUser = await createUser({
+      email,
+      name: sanitizedName,
+      role: role || UserRole.CUSTOMER
+    });
 
     // Generate tokens
     const accessToken = generateAccessToken(newUser.id, newUser.role);
     const refreshToken = generateRefreshToken(newUser.id);
 
     // Log successful signup
-    logSecurityEvent('SUCCESSFUL_SIGNUP', { email, userId: newUser.id, role: newUser.role }, request);
+    logSecurityEvent('SUCCESSFUL_SIGNUP', { email, userId: newUser.id, role: newUser.role });
 
     // Return user data (without password) and tokens
     const { id, email: userEmail, name: userName, role: userRole, createdAt, updatedAt } = newUser;
@@ -97,7 +102,7 @@ export async function POST(request: NextRequest) {
     return addSecurityHeaders(response);
   } catch (error) {
     console.error('Signup error:', error);
-    logSecurityEvent('SIGNUP_ERROR', { error: error.message }, request);
+    logSecurityEvent('SIGNUP_ERROR', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

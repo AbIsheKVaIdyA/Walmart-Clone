@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
     // Validate and sanitize card number
     const cardValidation = validateAndSanitizeCardNumber(cardNumber);
     if (!cardValidation.isValid) {
-      logSecurityEvent('INVALID_CARD_NUMBER', { userId: auth.userId, error: cardValidation.error }, request);
+      logSecurityEvent('INVALID_CARD_NUMBER', { userId: auth.userId }, request);
       return NextResponse.json(
-        { success: false, error: cardValidation.error },
+        { success: false, error: 'Invalid card number' },
         { status: 400 }
       );
     }
@@ -75,9 +75,9 @@ export async function POST(request: NextRequest) {
     // Validate CVV
     const cvvValidation = validateAndSanitizeCVV(cvv, cardValidation.sanitized);
     if (!cvvValidation.isValid) {
-      logSecurityEvent('INVALID_CVV', { userId: auth.userId, error: cvvValidation.error }, request);
+      logSecurityEvent('INVALID_CVV', { userId: auth.userId }, request);
       return NextResponse.json(
-        { success: false, error: cvvValidation.error },
+        { success: false, error: 'Invalid CVV' },
         { status: 400 }
       );
     }
@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
     // Validate amount
     const amountValidation = validateAndSanitizeAmount(amount);
     if (!amountValidation.isValid) {
-      logSecurityEvent('INVALID_AMOUNT', { userId: auth.userId, error: amountValidation.error }, request);
+      logSecurityEvent('INVALID_AMOUNT', { userId: auth.userId }, request);
       return NextResponse.json(
-        { success: false, error: amountValidation.error },
+        { success: false, error: 'Invalid amount' },
         { status: 400 }
       );
     }
@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
     // Validate holder name
     const nameValidation = validateInput(holderName, 'name', request);
     if (!nameValidation.isValid) {
-      logSecurityEvent('INVALID_HOLDER_NAME', { userId: auth.userId, error: nameValidation.error }, request);
+      logSecurityEvent('INVALID_HOLDER_NAME', { userId: auth.userId }, request);
       return NextResponse.json(
-        { success: false, error: nameValidation.error },
+        { success: false, error: 'Invalid holder name' },
         { status: 400 }
       );
     }
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Payment processing error:', error);
-    logSecurityEvent('PAYMENT_ERROR', { error: error.message }, request);
+    logSecurityEvent('PAYMENT_ERROR', { error: error instanceof Error ? error.message : 'Unknown error' }, request);
     return NextResponse.json(
       { success: false, error: 'Payment processing failed' },
       { status: 500 }
