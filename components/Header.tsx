@@ -8,17 +8,20 @@ import {
   LayoutGrid,
   Search,
   ShoppingCart,
-  User,
 } from "lucide-react";
 import { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store";
+import { useFirebaseAuthStore } from "@/store/firebaseAuthStore";
+import CompactAuthModal from "@/components/auth/CompactAuthModal";
+import UserProfile from "@/components/auth/UserProfile";
 import { getCartTotal } from "@/lib/getCartTotal";
 
 function Header() {
   const router = useRouter();
   const cart = useCartStore((state) => state.cart);
   const total = getCartTotal(cart);
+  const { isAuthenticated } = useFirebaseAuthStore();
 
   const handlesubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,16 +79,11 @@ function Header() {
           <p>My Items</p>
         </Link>
 
-        <Link
-          href={"/"}
-          className="flex text-white font-bold items-center space-x-2 text-sm"
-        >
-          <User size={20} />
-          <div>
-            <p className="text-xs font-extralight">Sign In</p>
-            <p>Account</p>
-          </div>
-        </Link>
+        {isAuthenticated ? (
+          <UserProfile />
+        ) : (
+          <CompactAuthModal />
+        )}
 
         <Link
           href={"/basket"}

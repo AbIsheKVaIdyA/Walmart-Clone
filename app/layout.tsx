@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import AdminAccessLink from "@/components/AdminAccessLink";
+import dynamic from "next/dynamic";
+
+const FirebaseProviderSimple = dynamic(() => import("@/components/FirebaseProviderSimple"), {
+  ssr: false,
+});
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,12 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Header />
+        <FirebaseProviderSimple>
+          <Header />
 
-        <div className="flex">
-          {modal}
-          {children}
-        </div>
+          <div className="flex">
+            {modal}
+            {children}
+          </div>
+          
+          <AdminAccessLink />
+        </FirebaseProviderSimple>
       </body>
     </html>
   );
