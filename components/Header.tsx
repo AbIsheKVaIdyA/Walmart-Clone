@@ -12,16 +12,15 @@ import {
 import { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store";
-import { useFirebaseAuthStore } from "@/store/firebaseAuthStore";
-import CompactAuthModal from "@/components/auth/CompactAuthModal";
-import UserProfile from "@/components/auth/UserProfile";
+import { useAuthStore } from "@/store/authStore";
+import AuthButton from "@/components/auth/AuthButton";
 import { getCartTotal } from "@/lib/getCartTotal";
 
 function Header() {
   const router = useRouter();
   const cart = useCartStore((state) => state.cart);
   const total = getCartTotal(cart);
-  const { isAuthenticated } = useFirebaseAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   const handlesubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,11 +78,7 @@ function Header() {
           <p>My Items</p>
         </Link>
 
-        {isAuthenticated ? (
-          <UserProfile />
-        ) : (
-          <CompactAuthModal />
-        )}
+        <AuthButton />
 
         <Link
           href={"/basket"}

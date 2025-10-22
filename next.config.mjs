@@ -95,33 +95,11 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://walmart-clone-50b37.firebaseapp.com https://firestore.googleapis.com https://firebasestorage.googleapis.com; frame-src 'self' https://accounts.google.com https://walmart-clone-50b37.firebaseapp.com; object-src 'none';",
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
-          },
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'unsafe-none',
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none';",
           },
         ],
       },
     ];
-  },
-  
-  // Enable HTTPS in production
-  ...(process.env.NODE_ENV === 'production' && {
-    experimental: {
-      serverComponentsExternalPackages: ['argon2'],
-    },
-  }),
-  
-  // Environment variables validation
-  env: {
-    JWT_SECRET: process.env.JWT_SECRET,
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   },
 };
 
