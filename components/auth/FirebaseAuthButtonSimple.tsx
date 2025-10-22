@@ -8,10 +8,9 @@ import { UserRole } from '@/typings/authTypings';
 export default function FirebaseAuthButtonSimple() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('email');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   
-  const { setUser, setAuthenticated } = useFirebaseAuthStore();
+  const { loginWithEmail, signupWithEmail, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuthStore();
 
   // Email/Password form state
   const [emailForm, setEmailForm] = useState({
@@ -31,96 +30,72 @@ export default function FirebaseAuthButtonSimple() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    // setIsLoading(true);
+    setLocalError(null);
 
     try {
-      const result = await FirebaseAuthService.signInWithEmail(emailForm.email, emailForm.password);
+      const result = await loginWithEmail(emailForm.email, emailForm.password);
       
-      if (result.success && result.user) {
-        // Update the store state
-        useFirebaseAuthStore.setState({
-          user: result.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null
-        });
-        
+      if (result.success) {
         // Close the modal
         setIsOpen(false);
         
         // Reset form
         setEmailForm({ email: '', password: '', name: '', confirmPassword: '' });
       } else {
-        setError(result.error || 'Sign in failed');
+        setLocalError(result.error || 'Sign in failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setLocalError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    // setIsLoading(true);
+    setLocalError(null);
 
     if (emailForm.password !== emailForm.confirmPassword) {
-      setError('Passwords do not match');
-      setIsLoading(false);
+      setLocalError('Passwords do not match');
+      // setIsLoading(false);
       return;
     }
 
     try {
-      const result = await FirebaseAuthService.signUpWithEmail(
+      const result = await signupWithEmail(
         emailForm.email, 
         emailForm.password, 
         emailForm.name, 
         UserRole.CUSTOMER
       );
       
-      if (result.success && result.user) {
-        // Update the store state
-        useFirebaseAuthStore.setState({
-          user: result.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null
-        });
-        
+      if (result.success) {
         // Close the modal
         setIsOpen(false);
         
         // Reset form
         setEmailForm({ email: '', password: '', name: '', confirmPassword: '' });
       } else {
-        setError(result.error || 'Sign up failed');
+        setLocalError(result.error || 'Sign up failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setLocalError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
+    // setIsLoading(true);
+    setLocalError(null);
 
     try {
       // Try popup first
-      const result = await FirebaseAuthService.signInWithGoogle();
+      const result = await loginWithGoogle();
       
-      if (result.success && result.user) {
-        // Update the store state
-        useFirebaseAuthStore.setState({
-          user: result.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null
-        });
-        
+      if (result.success) {
         // Close the modal
         setIsOpen(false);
         
@@ -129,43 +104,33 @@ export default function FirebaseAuthButtonSimple() {
         setPhoneForm({ phoneNumber: '', verificationCode: '' });
         setVerificationId(null);
       } else {
-        // If popup fails due to COOP issues, try redirect
-        if (result.error && (result.error.includes('popup') || result.error.includes('COOP'))) {
-          try {
-            await FirebaseAuthService.signInWithGoogleRedirect();
-            // The page will redirect, so we don't need to handle the result here
-          } catch (redirectError: any) {
-            setError('Google sign-in failed. Please try again.');
-          }
-        } else {
-          setError(result.error || 'Google sign-in failed');
-        }
+        setLocalError(result.error || 'Google sign-in failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setLocalError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 
   const handlePhoneVerification = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    // setIsLoading(true);
+    setLocalError(null);
 
     try {
       const result = await FirebaseAuthService.sendPhoneVerification(phoneForm.phoneNumber);
       
       if (result.success) {
         setVerificationId(result.verificationId || null);
-        setError(null);
+        setLocalError(null);
       } else {
-        setError(result.error || 'Failed to send verification code');
+        setLocalError(result.error || 'Failed to send verification code');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setLocalError('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 
@@ -379,9 +344,9 @@ export default function FirebaseAuthButtonSimple() {
           </div>
         )}
         
-        {error && (
+        {(error || localError) && (
           <div className="text-red-500 text-sm text-center mt-4">
-            {error}
+            {error || localError}
           </div>
         )}
         

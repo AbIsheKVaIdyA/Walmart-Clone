@@ -11,9 +11,9 @@ const initializeFirebase = async () => {
   if (typeof window === 'undefined') return;
   
   try {
-    const { getAuth } = await import('firebase/auth');
+    const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, PhoneAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } = await import('firebase/auth');
     const { getFirestore } = await import('firebase/firestore');
-    const { GoogleAuthProvider, PhoneAuthProvider } = await import('firebase/auth');
+    const { GoogleAuthProvider } = await import('firebase/auth');
     const { auth: firebaseAuth, db: firebaseDb } = await import('./firebase');
     
     auth = firebaseAuth;
