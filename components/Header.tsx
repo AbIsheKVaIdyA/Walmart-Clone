@@ -8,16 +8,72 @@ import {
   LayoutGrid,
   Search,
   ShoppingCart,
+  LogOut,
+  User,
 } from "lucide-react";
-import { FormEvent } from "react";
+import { FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store";
+import { useAuthStore } from "@/store/authStore";
 import { getCartTotal } from "@/lib/getCartTotal";
+import { LoginDialog } from "@/components/auth/LoginDialog";
+import { Button } from "@/components/ui/button";
 
 function Header() {
   const router = useRouter();
   const cart = useCartStore((state) => state.cart);
   const total = getCartTotal(cart);
+  const { user, isAuthenticated, clearAuth, setUser } = useAuthStore();
+
+  // Check auth status on mount - only if we don't already have user data
+  useEffect(() => {
+    // If we already have user data from persisted store, don't check again
+    // This prevents unnecessary API calls and double renders
+    if (user && isAuthenticated) {
+      return;
+    }
+
+    // Only check auth if we don't have user data
+    // This prevents clearing auth when we just logged in
+    if (!user) {
+      const checkAuth = async () => {
+        try {
+          const response = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+          } else {
+            clearAuth();
+          }
+        } catch (error) {
+          clearAuth();
+        }
+      };
+
+      // Small delay to ensure cookies are set after signup/login
+      const timeoutId = setTimeout(() => {
+        checkAuth();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [setUser, clearAuth, user, isAuthenticated]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      clearAuth();
+      router.push("/");
+    }
+  };
 
   const handlesubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,15 +131,48 @@ function Header() {
           <p>My Items</p>
         </Link>
 
-        <Link
-          href={"/"}
-          className="flex text-white font-bold items-center space-x-2 text-sm"
-        >
-          <p>Sign In</p>
-        </Link>
+        {isAuthenticated && user ? (
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 text-white text-sm">
+              <User size={20} />
+              <div className="flex flex-col">
+                <p className="font-bold">{user.name}</p>
+                <p className="text-xs font-extralight">
+                  {user.role === "admin" ? "Admin" : "Customer"}
+                </p>
+              </div>
+            </div>
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                className="text-white font-bold text-sm hover:text-yellow-400 hover:underline"
+              >
+                Admin
+              </Link>
+            )}
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="text-white hover:text-yellow-400 p-2"
+              size="sm"
+            >
+              <LogOut size={18} />
+            </Button>
+          </div>
+        ) : (
+          <LoginDialog>
+            <button 
+              type="button"
+              className="flex text-white font-bold items-center space-x-2 text-sm hover:text-yellow-400 cursor-pointer"
+            >
+              <p>Sign In</p>
+            </button>
+          </LoginDialog>
+        )}
 
         <Link
           href={"/basket"}
+          scroll={false}
           className="flex text-white font-bold items-center space-x-2 text-sm"
         >
           <ShoppingCart size={20} />

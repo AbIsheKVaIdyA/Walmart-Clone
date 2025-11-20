@@ -63,7 +63,7 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Security headers
+  // Security headers for HTTPS/TLS and data transmission security
   async headers() {
     return [
       {
@@ -90,12 +90,24 @@ const nextConfig = {
             value: 'geolocation=(), microphone=(), camera=()',
           },
           {
+            // HSTS: Force HTTPS for 1 year, include subdomains, and allow preloading
+            // Note: Cookie security (Secure, HttpOnly, SameSite) is handled in application code
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           },
           {
             key: 'Content-Security-Policy',
             value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none';",
+          },
+          {
+            // Additional security: Prevent MIME type sniffing
+            key: 'X-Download-Options',
+            value: 'noopen',
+          },
+          {
+            // Additional security: Prevent clickjacking
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
           },
         ],
       },

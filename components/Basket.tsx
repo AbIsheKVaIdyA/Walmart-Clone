@@ -7,11 +7,26 @@ import Image from "next/image";
 import AddToCart from "./AddToCart";
 import Product from "./Product";
 import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 function Basket() {
   const cart = useCartStore((state) => state.cart);
+  const router = useRouter();
   const grouped = groupBySKU(cart);
   const basketTotal = getCartTotal(cart);
+
+  const handleCheckout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (cart.length === 0) {
+      return;
+    }
+    
+    // Use window.location.href for reliable navigation when inside a modal
+    // This ensures the modal closes and we navigate to checkout
+    window.location.href = "/checkout";
+  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -57,7 +72,11 @@ function Basket() {
         <p className="font-bold text-2xl text-right text-walmart mb-5">
           Total:{basketTotal}
         </p>
-        <Button className="mt-5 h-20 bg-walmart hover:bg-walmart/50">
+        <Button 
+          className="mt-5 h-20 bg-walmart hover:bg-walmart/50"
+          onClick={handleCheckout}
+          disabled={cart.length === 0}
+        >
           Checkout
         </Button>
       </div>
