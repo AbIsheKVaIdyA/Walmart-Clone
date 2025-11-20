@@ -4,7 +4,6 @@ async function fetchProduct(url: string) {
   const username = process.env.OXYLABS_USERNAME;
   const password = process.env.OXYLABS_PASSWORD;
   const newUrl = new URL(`https://www.walmart.com${url}`);
-  console.log("Scraping >>> ", newUrl.toString());
   const body = {
     source: "universal_ecommerce",
     url: newUrl.toString(),
@@ -30,7 +29,10 @@ const result: ProductContent = data. results[0];
 const product = result.content;
 return product;
 })
-.catch((err) => console.log(err));
+.catch((err) => {
+  console.error("Error fetching product:", err);
+  return null;
+});
 return response;
 }
 

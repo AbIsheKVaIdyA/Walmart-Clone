@@ -4,17 +4,10 @@ import { applyRateLimit } from "@/lib/security/rateLimit";
 
 /**
  * Middleware to enforce security best practices
- * 
- * This middleware:
- * 1. ✅ Enforces HTTPS/TLS in production
- * 2. ✅ Adds security headers (HSTS, CSP, etc.)
- * 3. ✅ CSRF Protection - Generates tokens for GET requests
- * 4. ✅ Rate Limiting - Applies to API routes
- * 
- * HOW IT WORKS:
- * - GET requests: Generate/refresh CSRF token, set in cookie and header
- * - POST/PUT/DELETE: CSRF validation happens in route handlers
- * - Rate limiting: Applied to API routes to prevent abuse
+ * - Enforces HTTPS/TLS in production
+ * - Adds security headers (HSTS, X-Frame-Options, etc.)
+ * - CSRF Protection - Generates tokens for GET requests
+ * - Rate Limiting - Applies to API routes
  */
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -37,8 +30,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301); // Permanent redirect
   }
   
-  // ✅ CSRF Protection
-  // Generate CSRF token for GET requests (skip validation for exempt routes)
+  // CSRF Protection - Generate token for GET requests
   if (!isCSRFExempt(pathname)) {
     const csrfResponse = handleCSRF(request);
     if (csrfResponse) {
@@ -48,7 +40,7 @@ export function middleware(request: NextRequest) {
     }
   }
   
-  // ✅ Rate Limiting for API routes
+  // Rate Limiting for API routes
   if (pathname.startsWith('/api')) {
     const rateLimitResponse = applyRateLimit(request);
     if (rateLimitResponse) {
@@ -60,7 +52,7 @@ export function middleware(request: NextRequest) {
   // Create response
   const response = NextResponse.next();
   
-  // ✅ Add security headers
+  // Add security headers
   addSecurityHeaders(response, isHttps);
   
   return response;

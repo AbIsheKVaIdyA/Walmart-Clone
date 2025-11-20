@@ -35,7 +35,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
 
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  // Fetch CSRF token when dialog opens
   useEffect(() => {
     if (open) {
       getCSRFToken().then(setCsrfToken);
@@ -48,7 +47,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
     setError(null);
 
     try {
-      // Ensure we have CSRF token
       const token = csrfToken || await getCSRFToken();
       if (!token) {
         setError("Security token not available. Please refresh the page.");
@@ -56,20 +54,15 @@ export function LoginDialog({ children }: LoginDialogProps) {
         return;
       }
 
-      console.log("🟡 CLIENT: Attempting login with:", { email: loginData.email });
-      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": token, // ✅ Include CSRF token in header
+          "X-CSRF-Token": token,
         },
-        credentials: "include", // Include cookies for authentication
+        credentials: "include",
         body: JSON.stringify(loginData),
       });
-
-      console.log("🟡 CLIENT: Response status:", response.status);
-      console.log("🟡 CLIENT: Response ok:", response.ok);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
@@ -77,15 +70,10 @@ export function LoginDialog({ children }: LoginDialogProps) {
       }
 
       const data = await response.json();
-      console.log("🟢 CLIENT: Login successful!");
-
       setAuth(data);
       setOpen(false);
       setLoginData({ email: "", password: "" });
-      // No need to reload - Zustand persist will handle state, and Header will update via React
     } catch (err: any) {
-      console.error("🔴 CLIENT: Login error:", err);
-      // Better error message for "Failed to fetch"
       if (err.message === "Failed to fetch" || err.name === "TypeError") {
         setError("Cannot connect to server. Make sure the dev server is running on port 3000.");
       } else {
@@ -114,7 +102,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
     }
 
     try {
-      // Ensure we have CSRF token
       const token = csrfToken || await getCSRFToken();
       if (!token) {
         setError("Security token not available. Please refresh the page.");
@@ -126,9 +113,9 @@ export function LoginDialog({ children }: LoginDialogProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": token, // ✅ Include CSRF token in header
+          "X-CSRF-Token": token,
         },
-        credentials: "include", // Include cookies for authentication
+        credentials: "include",
         body: JSON.stringify({
           email: signupData.email,
           name: signupData.name,
@@ -151,9 +138,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
         password: "",
         confirmPassword: "",
       });
-      // No need to reload - Zustand persist will handle state, and Header will update via React
     } catch (err: any) {
-      console.error("Signup error:", err);
       setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
@@ -171,7 +156,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Button-style Tab Toggle */}
         <div className="flex gap-2 mb-4">
           <Button
             type="button"
@@ -197,7 +181,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
           </Button>
         </div>
 
-        {/* Login Form */}
         {activeTab === "login" && (
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
@@ -240,7 +223,6 @@ export function LoginDialog({ children }: LoginDialogProps) {
           </form>
         )}
 
-        {/* Signup Form */}
         {activeTab === "signup" && (
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
@@ -325,4 +307,3 @@ export function LoginDialog({ children }: LoginDialogProps) {
     </Dialog>
   );
 }
-

@@ -1,18 +1,7 @@
 /**
  * Payment Processing API Route
  * 
- * This route demonstrates secure handling of sensitive payment data:
- * 1. ✅ Input validation
- * 2. ✅ Parameterized database queries (via Supabase)
- * 3. ✅ Encryption of sensitive data before storage
- * 4. ✅ Never logging sensitive information
- * 
- * IMPORTANT: This is an example implementation. For production, you should:
- * - Use a PCI-compliant payment processor (Stripe, PayPal, etc.)
- * - Never store full credit card numbers (use tokenization)
- * - Implement proper error handling and logging
- * - Add rate limiting
- * - Add request authentication/authorization
+ * Note: For production, use a PCI-compliant payment processor (Stripe, PayPal, etc.)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -60,7 +49,7 @@ export async function POST(request: NextRequest) {
       billingAddress,
     } = body;
 
-    // ✅ Step 1: Input Validation
+    // Input Validation
     if (!userId || !amount || !cardNumber || !cardHolderName || !expiryMonth || !expiryYear || !cvv) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -117,28 +106,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient();
 
-    // ✅ Step 2: Encrypt Sensitive Data BEFORE storing
+    // Encrypt sensitive data before storing
     // Never store plain text credit card numbers or CVV!
     const encryptedCardNumber = encrypt(cleanedCardNumber);
     const encryptedCvv = encrypt(cvv);
 
-    // ✅ Step 3: Store Payment Method (if saving for future use)
+    // Store payment method
     // In production, you might want to use tokenization instead
     let paymentMethodId: string | null = null;
 
     try {
-      // ✅ SECURE: Supabase automatically parameterizes this query
       // All values are passed as parameters, preventing SQL injection
       const { data: paymentMethod, error: paymentMethodError } = await supabase
         .from('payment_methods')
         .insert({
-          user_id: userId, // ✅ Parameterized
-          card_number_encrypted: encryptedCardNumber, // ✅ Encrypted + Parameterized
-          card_holder_name: cardHolderName.trim(), // ✅ Parameterized
-          expiry_month: expiryMonth, // ✅ Parameterized
-          expiry_year: expiryYear, // ✅ Parameterized
-          cvv_encrypted: encryptedCvv, // ✅ Encrypted + Parameterized
-          billing_address: billingAddress ? JSON.stringify(billingAddress) : null, // ✅ Parameterized
+          user_id: userId,
+          card_number_encrypted: encryptedCardNumber,
+          card_holder_name: cardHolderName.trim(),
+          expiry_month: expiryMonth,
+          expiry_year: expiryYear,
+          cvv_encrypted: encryptedCvv,
+          billing_address: billingAddress ? JSON.stringify(billingAddress) : null,
         })
         .select('id')
         .single();
@@ -155,7 +143,7 @@ export async function POST(request: NextRequest) {
       // Continue with transaction creation even if payment method save fails
     }
 
-    // ✅ Step 4: Create Transaction Record
+    // Create transaction record
     // Store minimal encrypted data for audit purposes
     const transactionData = {
       cardLast4: cleanedCardNumber.slice(-4), // Safe to store last 4 digits
@@ -191,7 +179,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ Step 5: In production, here you would:
+    // In production, integrate with payment gateway here
     // - Call payment processor API (Stripe, PayPal, etc.)
     // - Update transaction status based on response
     // - Handle webhooks for async payment confirmation
@@ -205,7 +193,7 @@ export async function POST(request: NextRequest) {
       .update({ status: 'completed' })
       .eq('id', transaction.id);
 
-    // ✅ Step 6: Return Response
+    // Return response
     // NEVER return sensitive data in response!
     return NextResponse.json({
       success: true,
@@ -214,7 +202,7 @@ export async function POST(request: NextRequest) {
       amount: transaction.amount,
       currency: transaction.currency,
       status: 'completed',
-      // ✅ DO NOT return:
+      // Do not return sensitive data
       // - cardNumber
       // - cvv
       // - full encrypted data
@@ -222,7 +210,7 @@ export async function POST(request: NextRequest) {
     }, { status: 200 });
 
   } catch (error: any) {
-    // ✅ Never log sensitive data in error messages
+    // Never log sensitive data
     console.error('Payment processing error:', error.message);
     
     return NextResponse.json(
@@ -251,13 +239,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient();
 
-    // ✅ SECURE: Parameterized query with user verification
+    // Verify user owns this transaction
     // Only return transactions that belong to the requesting user
     const { data: transaction, error } = await supabase
       .from('transactions')
       .select('id, order_id, amount, currency, status, created_at')
-      .eq('id', transactionId) // ✅ Parameterized
-      .eq('user_id', userId) // ✅ Parameterized - ensures user can only access their own transactions
+      .eq('id', transactionId)
+      .eq('user_id', userId)
       .single();
 
     if (error || !transaction) {
@@ -267,7 +255,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ✅ Return only non-sensitive data
+    // Return only non-sensitive data
     return NextResponse.json({
       transactionId: transaction.id,
       orderId: transaction.order_id,
@@ -275,7 +263,7 @@ export async function GET(request: NextRequest) {
       currency: transaction.currency,
       status: transaction.status,
       createdAt: transaction.created_at,
-      // ✅ DO NOT return encrypted_payment_data
+      // Do not return encrypted payment data
     });
 
   } catch (error: any) {

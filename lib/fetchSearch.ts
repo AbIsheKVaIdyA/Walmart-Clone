@@ -30,7 +30,10 @@ function fetchSearch(searchTerm: string) {
       const result: Result = data.results[0];
       return result;
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.error("Error fetching search results:", err);
+      return null;
+    });
 
   return response;
 }

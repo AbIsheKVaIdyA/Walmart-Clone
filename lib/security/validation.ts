@@ -1,42 +1,12 @@
 /**
  * Input Validation and Sanitization Utilities
  * 
- * This module provides comprehensive input validation and sanitization to prevent:
- * - XSS (Cross-Site Scripting) attacks
- * - SQL Injection (via parameterized queries)
- * - Command Injection
- * - Path Traversal
- * - Other injection attacks
- * 
- * HOW IT WORKS:
- * 
- * 1. VALIDATION:
- *    - Checks if input matches expected format (email, string, number, etc.)
- *    - Validates length, pattern, and type
- *    - Returns clear error messages
- * 
- * 2. SANITIZATION:
- *    - Removes or escapes dangerous characters
- *    - HTML entities encoding to prevent XSS
- *    - Trims whitespace
- *    - Normalizes input (e.g., lowercase emails)
- * 
- * 3. XSS PREVENTION:
- *    - Escapes HTML special characters (<, >, &, ", ')
- *    - Converts them to HTML entities (&lt;, &gt;, &amp;, &quot;, &#x27;)
- *    - Prevents malicious scripts from executing in browser
+ * Provides input validation and sanitization to prevent XSS attacks
+ * and other injection vulnerabilities.
  */
 
 /**
- * Sanitizes a string to prevent XSS attacks
- * Escapes HTML special characters to their HTML entity equivalents
- * 
- * @param input - The string to sanitize
- * @returns Sanitized string safe for HTML display
- * 
- * Example:
- *   sanitizeInput("<script>alert('XSS')</script>")
- *   Returns: "&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;"
+ * Sanitizes a string to prevent XSS attacks by escaping HTML special characters
  */
 export function sanitizeInput(input: string): string {
   if (typeof input !== 'string') {
@@ -59,10 +29,6 @@ export function sanitizeInput(input: string): string {
 
 /**
  * Sanitizes an object recursively, sanitizing all string values
- * Useful for sanitizing entire request bodies
- * 
- * @param obj - Object to sanitize
- * @returns New object with sanitized string values
  */
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
   const sanitized = { ...obj };
@@ -84,9 +50,6 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
 
 /**
  * Validates and sanitizes email address
- * 
- * @param email - Email to validate
- * @returns Object with validation result and sanitized email
  */
 export function validateEmail(email: string): {
   isValid: boolean;
@@ -132,9 +95,6 @@ export function validateEmail(email: string): {
 
 /**
  * Validates and sanitizes a name field
- * 
- * @param name - Name to validate
- * @returns Object with validation result and sanitized name
  */
 export function validateName(name: string): {
   isValid: boolean;
@@ -185,11 +145,6 @@ export function validateName(name: string): {
 
 /**
  * Validates password strength
- * Note: Passwords are NOT sanitized (we need to preserve special characters)
- * but we validate they don't contain dangerous patterns
- * 
- * @param password - Password to validate
- * @returns Object with validation result
  */
 export function validatePassword(password: string): {
   isValid: boolean;
@@ -250,10 +205,6 @@ export function validatePassword(password: string): {
 
 /**
  * Validates a string input with length constraints
- * 
- * @param input - String to validate
- * @param options - Validation options
- * @returns Object with validation result and sanitized string
  */
 export function validateString(
   input: string,
@@ -333,10 +284,6 @@ export function validateString(
 
 /**
  * Validates a number input
- * 
- * @param input - Number to validate (can be string or number)
- * @param options - Validation options
- * @returns Object with validation result and parsed number
  */
 export function validateNumber(
   input: string | number,

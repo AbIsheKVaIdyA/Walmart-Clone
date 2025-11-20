@@ -68,7 +68,7 @@ function Header() {
         credentials: "include",
       });
     } catch (error) {
-      console.error("Logout error:", error);
+      // Logout error - user will be logged out anyway
     } finally {
       clearAuth();
       router.push("/");

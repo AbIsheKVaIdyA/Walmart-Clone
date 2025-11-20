@@ -1,32 +1,9 @@
 /**
  * CSRF (Cross-Site Request Forgery) Protection
  * 
- * CSRF attacks occur when a malicious website tricks a user's browser into
- * making unauthorized requests to your application where the user is authenticated.
- * 
- * HOW CSRF PROTECTION WORKS:
- * 
- * 1. TOKEN GENERATION:
- *    - Server generates a unique, random token for each user session
- *    - Token is stored in an httpOnly cookie (can't be accessed by JavaScript)
- *    - Token is also sent to the client in a response header or form
- * 
- * 2. TOKEN VALIDATION:
- *    - For state-changing requests (POST, PUT, DELETE, PATCH), the client must
- *      include the CSRF token in the request (header or body)
- *    - Server compares the token from the request with the token in the cookie
- *    - If they match, request is legitimate; if not, request is rejected
- * 
- * 3. WHY IT WORKS:
- *    - Malicious sites can't read the httpOnly cookie (Same-Origin Policy)
- *    - They can't access the token from your site's JavaScript
- *    - They can't forge requests with the correct token
- * 
- * IMPLEMENTATION:
- * - Token stored in httpOnly cookie: csrf-token
- * - Token sent in request header: X-CSRF-Token
- * - Tokens expire after 24 hours
- * - New token generated on each request (double-submit cookie pattern)
+ * Uses double-submit cookie pattern:
+ * - Token stored in httpOnly cookie and sent in X-CSRF-Token header
+ * - Server validates both tokens match for state-changing requests
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -35,19 +12,9 @@ const CSRF_TOKEN_COOKIE_NAME = 'csrf-token';
 const CSRF_TOKEN_HEADER_NAME = 'X-CSRF-Token';
 const CSRF_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-/**
- * Generates a cryptographically secure random CSRF token
- * Uses Web Crypto API (available in Edge Runtime)
- * 
- * @returns A random 32-byte token encoded as hex string (64 characters)
- */
 export function generateCSRFToken(): string {
-  // Use Web Crypto API (available in Edge Runtime)
-  // Generate 32 random bytes (256 bits)
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  
-  // Convert to hex string
   return Array.from(array)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
