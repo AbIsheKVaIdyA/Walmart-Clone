@@ -17,29 +17,34 @@ function BasketInterception() {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState<string>("");
 
-  // Only open modal if we're on the basket route and NOT on checkout
+  // Track actual window location pathname
   useEffect(() => {
-    // Always close modal if we're on checkout page
-    if (pathname === "/checkout") {
-      setIsOpen(false);
-      // Navigate away from modal route if we're on /basket but should be on /checkout
-      if (typeof window !== "undefined" && window.location.pathname === "/basket") {
-        router.replace("/checkout");
-      }
-      return;
-    }
-    
-    // Only open modal if we're actually on the /basket route
     if (typeof window !== "undefined") {
-      const currentPath = window.location.pathname;
-      if (currentPath === "/basket" && pathname !== "/checkout") {
-        setIsOpen(true);
-      } else {
-        setIsOpen(false);
-      }
+      setCurrentPath(window.location.pathname);
+      
+      const handleLocationChange = () => {
+        setCurrentPath(window.location.pathname);
+      };
+      
+      // Listen for popstate events (browser back/forward)
+      window.addEventListener("popstate", handleLocationChange);
+      
+      // Also check on every navigation
+      const checkPath = () => {
+        setCurrentPath(window.location.pathname);
+      };
+      window.addEventListener("pushstate", checkPath);
+      window.addEventListener("replacestate", checkPath);
+      
+      return () => {
+        window.removeEventListener("popstate", handleLocationChange);
+        window.removeEventListener("pushstate", checkPath);
+        window.removeEventListener("replacestate", checkPath);
+      };
     }
-  }, [pathname, router]);
+  }, []);
 
   function onDismiss() {
     setIsOpen(false);
@@ -48,21 +53,16 @@ function BasketInterception() {
 
   // Prevent scroll restoration when modal opens
   useEffect(() => {
-    // Prevent Next.js from trying to scroll to fixed/sticky elements
     if (typeof window !== "undefined") {
-      // Store original scroll position
       const scrollY = window.scrollY;
       
-      // Prevent scroll restoration
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
 
-      // Restore scroll position to prevent auto-scroll
       window.scrollTo(0, scrollY);
 
       return () => {
-        // Restore scroll restoration on unmount
         if ("scrollRestoration" in window.history) {
           window.history.scrollRestoration = "auto";
         }
@@ -70,15 +70,46 @@ function BasketInterception() {
     }
   }, []);
 
-  // Don't render modal if on checkout page
-  if (pathname === "/checkout") {
+  useEffect(() => {
+    // Check both pathname and actual window location
+    const isOnCheckout = pathname === "/checkout" || currentPath === "/checkout";
+    
+    // Always close modal if we're on checkout page
+    if (isOnCheckout) {
+      setIsOpen(false);
+      return;
+    }
+    
+    // Only open modal if we're actually on the /basket route
+    if (pathname === "/basket" || currentPath === "/basket") {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  }, [pathname, currentPath]);
+
+  // Early return - don't render anything if on checkout (AFTER all hooks)
+  const isOnCheckout = pathname === "/checkout" || (typeof window !== "undefined" && window.location.pathname === "/checkout");
+  if (isOnCheckout) {
+    return null;
+  }
+
+  // Double-check before rendering Dialog - ensure we're NOT on checkout
+  const shouldRender = !isOnCheckout && (pathname === "/basket" || currentPath === "/basket");
+  
+  if (!shouldRender) {
     return null;
   }
 
   return (
     <Dialog
-      open={isOpen}
+      open={isOpen && shouldRender}
       onOpenChange={(open) => {
+        // Prevent opening if on checkout
+        if (pathname === "/checkout" || currentPath === "/checkout") {
+          setIsOpen(false);
+          return;
+        }
         setIsOpen(open);
         if (!open) {
           onDismiss();

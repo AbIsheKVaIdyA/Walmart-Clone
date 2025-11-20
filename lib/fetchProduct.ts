@@ -79,30 +79,163 @@ async function fetchProduct(url: string) {
     }
 
     const product = result.content;
+    const productAny = product as any;
     
-    if (!product.title) {
-      product.title = "Product";
+    // Debug: Log the actual structure received
+    console.log("=== PRODUCT STRUCTURE DEBUG ===");
+    console.log("product.images:", product.images);
+    console.log("product.image:", productAny.image);
+    console.log("product.general:", productAny.general);
+    console.log("product.primary_image:", productAny.primary_image);
+    console.log("product.media:", productAny.media);
+    console.log("product.photos:", productAny.photos);
+    console.log("product.thumbnail:", productAny.thumbnail);
+    console.log("Full product keys:", Object.keys(productAny));
+    
+    // Extract title from multiple possible locations
+    if (!product.title || product.title === "Product") {
+      // Try alternative locations for title
+      const extractedTitle = productAny.name || 
+                     productAny.product_name || 
+                     productAny.title_text ||
+                     productAny.heading ||
+                     (productAny.general && (productAny.general.title || productAny.general.name || productAny.general.heading)) ||
+                     (productAny.metadata && (productAny.metadata.title || productAny.metadata.name)) ||
+                     null;
+      
+      if (extractedTitle && extractedTitle !== "Product") {
+        product.title = extractedTitle;
+      } else if (!product.title) {
+        product.title = "Product";
+      }
     }
 
     // Create a simple SVG placeholder as data URI (no external fetch needed)
     const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='18' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
     
-    if (!product.images || !Array.isArray(product.images) || product.images.length === 0) {
-      product.images = [placeholderImage];
-    } else {
-      product.images = product.images.map((img: any) => {
-        if (typeof img === 'string') {
-          return img;
-        } else if (typeof img === 'object' && img !== null) {
-          return img.url || img.src || img.image || img.link || String(img);
-        }
-        return String(img);
-      }).filter((img: string) => img && img !== 'undefined' && (img.startsWith('http') || img.startsWith('data:')));
-      
-      if (product.images.length === 0) {
-        product.images = [placeholderImage];
+    // Extract images from multiple possible locations - check ALL locations, not just first match
+    let images: any[] = [];
+    
+    // Try primary location - product.images array
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      images = [...images, ...product.images];
+    }
+    
+    // Try product.image (string or array)
+    if (productAny.image) {
+      if (typeof productAny.image === 'string') {
+        images.push(productAny.image);
+      } else if (Array.isArray(productAny.image)) {
+        images = [...images, ...productAny.image];
       }
     }
+    
+    // Try product.general.image (like in search results)
+    if (productAny.general) {
+      if (productAny.general.image) {
+        const generalImages = Array.isArray(productAny.general.image) ? productAny.general.image : [productAny.general.image];
+        images = [...images, ...generalImages];
+      }
+      if (productAny.general.images && Array.isArray(productAny.general.images)) {
+        images = [...images, ...productAny.general.images];
+      }
+    }
+    
+    // Try product.primary_image
+    if (productAny.primary_image) {
+      const primaryImages = Array.isArray(productAny.primary_image) ? productAny.primary_image : [productAny.primary_image];
+      images = [...images, ...primaryImages];
+    }
+    
+    // Try product.media
+    if (productAny.media) {
+      if (Array.isArray(productAny.media)) {
+        images = [...images, ...productAny.media];
+      } else if (productAny.media.images && Array.isArray(productAny.media.images)) {
+        images = [...images, ...productAny.media.images];
+      } else if (productAny.media.image) {
+        const mediaImages = Array.isArray(productAny.media.image) ? productAny.media.image : [productAny.media.image];
+        images = [...images, ...mediaImages];
+      }
+    }
+    
+    // Try product.photos
+    if (productAny.photos && Array.isArray(productAny.photos)) {
+      images = [...images, ...productAny.photos];
+    }
+    
+    // Try product.thumbnail
+    if (productAny.thumbnail) {
+      images.push(productAny.thumbnail);
+    }
+    
+    // Try product.gallery
+    if (productAny.gallery && Array.isArray(productAny.gallery)) {
+      images = [...images, ...productAny.gallery];
+    }
+    
+    console.log("Extracted images array:", images);
+    
+    // Normalize images to strings and convert relative URLs to absolute
+    if (images.length > 0) {
+      const normalizedImages = images.map((img: any) => {
+        let imageUrl: string = "";
+        
+        if (typeof img === 'string') {
+          imageUrl = img;
+        } else if (typeof img === 'object' && img !== null) {
+          // Try various object properties
+          imageUrl = img.url || 
+                     img.src || 
+                     img.image || 
+                     img.link || 
+                     img.href || 
+                     img.original || 
+                     img.full || 
+                     img.medium ||
+                     img.large ||
+                     (Array.isArray(img) ? img[0] : String(img));
+        } else {
+          imageUrl = String(img);
+        }
+        
+        // Convert relative URLs to absolute
+        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:') && !imageUrl.startsWith('//')) {
+          // If it starts with /, prepend https://www.walmart.com
+          if (imageUrl.startsWith('/')) {
+            imageUrl = `https://www.walmart.com${imageUrl}`;
+          } else if (imageUrl) {
+            // Try to make it absolute
+            imageUrl = `https://www.walmart.com/${imageUrl}`;
+          }
+        }
+        
+        return imageUrl;
+      }).filter((img: string) => {
+        // Filter out invalid images
+        return img && 
+               img !== 'undefined' && 
+               img !== 'null' &&
+               img.trim() !== '' &&
+               (img.startsWith('http://') || 
+                img.startsWith('https://') || 
+                img.startsWith('data:') ||
+                img.startsWith('//'));
+      });
+      
+      console.log("Normalized images:", normalizedImages);
+      
+      if (normalizedImages.length > 0) {
+        // Remove duplicates
+        product.images = Array.from(new Set(normalizedImages));
+      } else {
+        product.images = [placeholderImage];
+      }
+    } else {
+      product.images = [placeholderImage];
+    }
+    
+    console.log("Final product.images:", product.images);
 
     // Ensure specifications array exists
     if (!product.specifications || !Array.isArray(product.specifications)) {
