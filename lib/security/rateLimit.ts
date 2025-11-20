@@ -1,33 +1,7 @@
 /**
  * Rate Limiting Middleware
- * 
- * Rate limiting prevents brute-force attacks and API abuse by limiting
- * the number of requests a client can make within a specific time window.
- * 
- * HOW RATE LIMITING WORKS:
- * 
- * 1. TRACKING:
- *    - Each request is tracked by a unique identifier (IP address, user ID, etc.)
- *    - We store: number of requests, timestamp of first request, timestamp of last request
- * 
- * 2. WINDOW:
- *    - Time window: e.g., 15 minutes
- *    - Max requests: e.g., 5 login attempts per 15 minutes
- *    - After window expires, counter resets
- * 
- * 3. ENFORCEMENT:
- *    - If limit exceeded: return 429 Too Many Requests
- *    - Include Retry-After header to tell client when to retry
- *    - Log attempts for security monitoring
- * 
- * 4. STORAGE:
- *    - In-memory Map (simple, works for single server)
- *    - For production with multiple servers, use Redis
- * 
- * WHY IT PREVENTS BRUTE-FORCE:
- * - Attackers can't try unlimited password combinations
- * - After 5 failed attempts, they must wait 15 minutes
- * - Makes brute-force attacks impractical
+ * Prevents brute-force attacks by limiting requests within a time window.
+ * Uses in-memory storage (use Redis for production with multiple servers).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -77,16 +51,10 @@ interface RateLimitEntry {
 
 /**
  * In-memory store for rate limit data
- * Key: identifier (IP address or user ID)
- * Value: Rate limit entry
- * 
- * NOTE: For production with multiple servers, use Redis instead
+ * Use Redis for production with multiple servers
  */
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-/**
- * Cleanup old entries periodically to prevent memory leaks
- */
 const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 setInterval(() => {

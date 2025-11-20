@@ -8,12 +8,19 @@ import AddToCart from "./AddToCart";
 import Product from "./Product";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function Basket() {
   const cart = useCartStore((state) => state.cart);
-  const router = useRouter();
-  const grouped = groupBySKU(cart);
-  const basketTotal = getCartTotal(cart);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Handle hydration - Zustand persist needs to hydrate on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+      const router = useRouter();
+      const grouped = groupBySKU(cart);
+      const basketTotal = getCartTotal(cart);
 
   const handleCheckout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,6 +34,24 @@ function Basket() {
     // This ensures the modal closes and we navigate to checkout
     window.location.href = "/checkout";
   };
+
+  // Wait for hydration before rendering
+  if (!isMounted) {
+    return (
+      <div className="max-w-7xl mx-auto p-10 text-center">
+        <p className="text-xl">Loading cart...</p>
+      </div>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto p-10 text-center">
+        <p className="text-xl font-bold">Your cart is empty</p>
+        <p className="text-gray-500 mt-2">Add items to your cart to see them here</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">

@@ -1,12 +1,6 @@
 /**
  * Input Validation and Sanitization Utilities
- * 
- * Provides input validation and sanitization to prevent XSS attacks
- * and other injection vulnerabilities.
- */
-
-/**
- * Sanitizes a string to prevent XSS attacks by escaping HTML special characters
+ * Prevents XSS attacks and injection vulnerabilities.
  */
 export function sanitizeInput(input: string): string {
   if (typeof input !== 'string') {

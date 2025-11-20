@@ -16,15 +16,27 @@ import { useEffect, useState } from "react";
 function BasketInterception() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Don't show modal if we're on checkout page
+  // Only open modal if we're on the basket route and NOT on checkout
   useEffect(() => {
+    // Always close modal if we're on checkout page
     if (pathname === "/checkout") {
       setIsOpen(false);
-      // Navigate away from modal route
-      if (window.location.pathname === "/basket") {
+      // Navigate away from modal route if we're on /basket but should be on /checkout
+      if (typeof window !== "undefined" && window.location.pathname === "/basket") {
         router.replace("/checkout");
+      }
+      return;
+    }
+    
+    // Only open modal if we're actually on the /basket route
+    if (typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+      if (currentPath === "/basket" && pathname !== "/checkout") {
+        setIsOpen(true);
+      } else {
+        setIsOpen(false);
       }
     }
   }, [pathname, router]);
@@ -77,7 +89,7 @@ function BasketInterception() {
         <DialogHeader>
           <DialogTitle>Basket</DialogTitle>
           <DialogDescription>
-            <p>Contents of your basket</p>
+            Contents of your basket
           </DialogDescription>
         </DialogHeader>
         <Basket />

@@ -20,6 +20,8 @@ export default function CheckoutPage() {
   const [transactionId, setTransactionId] = useState<string>("");
   const [orderId, setOrderId] = useState<string>("");
   const [error, setError] = useState<string>("");
+  // Store the total amount before cart is cleared
+  const [finalAmount, setFinalAmount] = useState<string>("");
 
   const grouped = groupBySKU(cart);
   const basketTotal = getCartTotal(cart);
@@ -48,16 +50,21 @@ export default function CheckoutPage() {
   }, []);
 
   const handlePaymentSuccess = (txnId: string, ordId: string) => {
+    // Store the total amount before clearing cart
+    const currentTotal = getCartTotal(useCartStore.getState().cart);
+    setFinalAmount(currentTotal);
+    
     setTransactionId(txnId);
     setOrderId(ordId);
     setPaymentSuccess(true);
-    // Clear cart after successful payment
+    
+    // Clear cart after successful payment (with delay to show confirmation)
     setTimeout(() => {
       const currentCart = useCartStore.getState().cart;
       currentCart.forEach((item) => {
         useCartStore.getState().removeFromCraft(item);
       });
-    }, 3000);
+    }, 5000); // Increased delay to 5 seconds
   };
 
   const handlePaymentError = (errorMessage: string) => {
@@ -66,8 +73,8 @@ export default function CheckoutPage() {
 
   if (paymentSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="w-full flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-gray-100 py-12 px-4 min-h-[calc(100vh-120px)]">
+        <div className="w-full max-w-4xl mx-auto">
           <Card className="border-2 border-green-500 shadow-xl">
             <CardHeader className="text-center pb-4">
               <div className="flex justify-center mb-4">
@@ -94,7 +101,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Amount:</span>
-                  <span className="text-lg font-bold text-walmart">{basketTotal}</span>
+                  <span className="text-lg font-bold text-walmart">{finalAmount || basketTotal}</span>
                 </div>
               </div>
 

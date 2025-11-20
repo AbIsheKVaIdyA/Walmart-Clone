@@ -1,8 +1,6 @@
 /**
  * Secure Database Functions
- * 
- * All database queries use Supabase's query builder which automatically
- * parameterizes queries to prevent SQL injection attacks.
+ * Uses Supabase's parameterized queries to prevent SQL injection.
  */
 
 import { User, UserRole, UserWithoutPassword } from "@/typings/authTypings";

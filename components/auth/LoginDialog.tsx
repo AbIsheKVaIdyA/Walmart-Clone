@@ -227,12 +227,12 @@ export function LoginDialog({ children }: LoginDialogProps) {
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-200">
-                <p className="font-semibold">Error:</p>
-                <p>{error}</p>
+                <div className="font-semibold">Error:</div>
+                <div>{error}</div>
                 {error.includes("already exists") && (
-                  <p className="mt-2 text-xs text-red-500">
+                  <div className="mt-2 text-xs text-red-500">
                     Try logging in instead, or use a different email address.
-                  </p>
+                  </div>
                 )}
               </div>
             )}

@@ -79,6 +79,10 @@ JWT_REFRESH_SECRET=your_jwt_refresh_secret_key_min_32_characters
 
 # Encryption Key (32 character hex string)
 ENCRYPTION_KEY=your_32_character_hex_encryption_key
+
+# Oxylabs API Configuration (for product scraping)
+OXYLABS_USERNAME=your_oxylabs_username
+OXYLABS_PASSWORD=your_oxylabs_password
 ```
 
 **How to get Supabase credentials:**
@@ -272,10 +276,7 @@ npm run dev -- -p 3001
 
 ## 📚 Additional Documentation
 
-- **Security Setup**: See `SECURITY_SETUP.md` (if exists)
-- **Database Security**: See `DATABASE_SECURITY_GUIDE.md` (if exists)
-- **Data Transmission**: See `DATA_TRANSMISSION_SECURITY.md` (if exists)
-- **Validation Guide**: See `VALIDATION_GUIDE.md` (if exists)
+- **Logging & Monitoring**: See `LOGGING_MONITORING_GUIDE.md` for security logging and monitoring setup
 
 ## 🤝 Contributing
 

@@ -7,10 +7,18 @@ import { LoginRequest, AuthResponse } from "@/typings/authTypings";
 import { validateCSRFToken } from "@/lib/security/csrf";
 import { applyRateLimit, resetRateLimit, getClientIdentifier } from "@/lib/security/rateLimit";
 import { validateEmail } from "@/lib/security/validation";
+import {
+  logFailedLogin,
+  logSuccessfulLogin,
+  logRateLimitExceeded,
+  logCSRFValidationFailed,
+  checkAndLogSuspiciousActivity,
+} from "@/lib/security/logging";
 
 export async function POST(request: NextRequest) {
   try {
     if (!validateCSRFToken(request)) {
+      await logCSRFValidationFailed(request, "/api/auth/login");
       return NextResponse.json(
         { error: "Invalid or missing CSRF token" },
         { status: 403 }
@@ -19,6 +27,8 @@ export async function POST(request: NextRequest) {
 
     const rateLimitResponse = applyRateLimit(request);
     if (rateLimitResponse) {
+      // Log rate limit exceeded
+      await logRateLimitExceeded(request, "/api/auth/login", 5, 15 * 60 * 1000);
       return rateLimitResponse;
     }
 
@@ -44,6 +54,10 @@ export async function POST(request: NextRequest) {
     const user = await findUserByEmail(normalizedEmail);
 
     if (!user || !user.password) {
+      // Log failed login attempt
+      await logFailedLogin(request, normalizedEmail, "User not found or invalid");
+      // Check for suspicious activity
+      await checkAndLogSuspiciousActivity(request, normalizedEmail, 1);
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -53,6 +67,10 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await verifyPassword(password, user.password);
     
     if (!isValidPassword) {
+      // Log failed login attempt
+      await logFailedLogin(request, normalizedEmail, "Invalid password");
+      // Check for suspicious activity
+      await checkAndLogSuspiciousActivity(request, normalizedEmail, 1);
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -61,6 +79,9 @@ export async function POST(request: NextRequest) {
 
     const clientId = getClientIdentifier(request);
     resetRateLimit(clientId);
+
+    // Log successful login
+    await logSuccessfulLogin(request, user.id, user.email);
 
     const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = generateRefreshToken(user.id, user.email, user.role);

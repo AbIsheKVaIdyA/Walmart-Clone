@@ -1,6 +1,3 @@
-/**
- * Client-side CSRF Token Utilities
- */
 export async function fetchCSRFToken(): Promise<string | null> {
   try {
     const response = await fetch('/api/csrf-token', {
@@ -14,10 +11,13 @@ export async function fetchCSRFToken(): Promise<string | null> {
       return null;
     }
 
-    const token = response.headers.get('X-CSRF-Token');
+    const data = await response.json().catch(() => null);
+    const headerToken = response.headers.get('X-CSRF-Token');
+    const token = data?.token || headerToken;
     
     if (!token) {
-      console.warn('CSRF token not found in response headers');
+      console.warn('CSRF token not found in response');
+      return null;
     }
     
     return token;

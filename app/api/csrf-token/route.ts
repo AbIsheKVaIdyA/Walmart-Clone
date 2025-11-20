@@ -1,30 +1,23 @@
-/**
- * GET /api/csrf-token
- * 
- * Endpoint to fetch CSRF token for client-side use
- * 
- * This endpoint is called by the client to get the CSRF token.
- * The middleware will generate and set the token in both:
- * - Cookie: csrf-token (httpOnly)
- * - Header: X-CSRF-Token (readable by client)
- * 
- * The client reads the token from the header and includes it
- * in subsequent POST/PUT/DELETE requests.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { handleCSRF } from '@/lib/security/csrf';
+import { generateCSRFToken, setCSRFTokenCookie, getCSRFTokenFromCookie } from '@/lib/security/csrf';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  // The handleCSRF function will generate a token and set it in cookie + header
-  const response = handleCSRF(request);
-  
-  if (response) {
-    // Token has been set, return success
+  try {
+    const existingToken = getCSRFTokenFromCookie(request);
+    const token = existingToken || generateCSRFToken();
+    const response = NextResponse.json({ success: true, token });
+    
+    setCSRFTokenCookie(response, token, request);
+    response.headers.set('X-CSRF-Token', token);
+    
     return response;
+  } catch (error: any) {
+    console.error('CSRF token generation error:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate CSRF token' },
+      { status: 500 }
+    );
   }
-  
-  // Fallback: return empty response (shouldn't happen for GET)
-  return NextResponse.json({ success: true });
 }
-
