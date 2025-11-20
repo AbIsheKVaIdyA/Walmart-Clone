@@ -160,13 +160,13 @@ export async function POST(request: NextRequest) {
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .insert({
-        user_id: userId, // ✅ Parameterized
-        order_id: orderId, // ✅ Parameterized
-        amount: amount, // ✅ Parameterized
-        currency: currency, // ✅ Parameterized
-        payment_method_id: paymentMethodId, // ✅ Parameterized
-        status: 'pending', // Will be updated after payment processor confirmation
-        encrypted_payment_data: encryptedTransactionData, // ✅ Encrypted + Parameterized
+        user_id: userId,
+        order_id: orderId,
+        amount: amount,
+        currency: currency,
+        payment_method_id: paymentMethodId,
+        status: 'pending',
+        encrypted_payment_data: encryptedTransactionData,
       })
       .select('id, order_id, amount, currency, status, created_at')
       .single();
