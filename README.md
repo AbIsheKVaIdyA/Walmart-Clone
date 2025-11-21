@@ -216,57 +216,5 @@ curl -X POST http://localhost:3000/api/auth/login \
 # Should be rejected or sanitized
 ```
 
-## 🚨 Troubleshooting
-
-### Issue: "Missing Supabase environment variables"
-**Solution**: Make sure `.env.local` file exists with all required variables.
-
-### Issue: "CSRF token not found"
-**Solution**: Ensure you're including the CSRF token in request headers. The token is automatically fetched when the login dialog opens.
-
-### Issue: "Rate limit exceeded"
-**Solution**: Wait for the rate limit window to expire (15 minutes for login, 1 hour for signup).
-
-### Issue: Port 3000 already in use
-**Solution**: 
-```bash
-# Use a different port
-npm run dev -- -p 3001
-```
-
-## 📚 Additional Documentation
-
-- **Logging & Monitoring**: See `LOGGING_MONITORING_GUIDE.md` for security logging and monitoring setup
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is private and proprietary.
-
-## 👨‍💻 Development Notes
-
-- The application uses Next.js 14 App Router
-- All API routes are server-side only
-- Authentication uses JWT tokens stored in httpOnly cookies
-- Security features are implemented following OWASP best practices
-- The codebase is fully typed with TypeScript
-
-## 🔐 Security Best Practices
-
-- Never commit `.env.local` file
-- Use strong, unique secrets for JWT and encryption
-- Regularly update dependencies
-- Monitor for security vulnerabilities
-- Use HTTPS in production
-- Keep Supabase service role key secret
-
----
 
 **Built with ❤️ using Next.js and TypeScript**
