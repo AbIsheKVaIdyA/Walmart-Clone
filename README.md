@@ -145,47 +145,7 @@ npm start
 npm run lint
 ```
 
-## 📁 Project Structure
 
-```
-walmart-clone/
-├── app/                      # Next.js App Router pages
-│   ├── api/                  # API routes
-│   │   ├── auth/             # Authentication endpoints
-│   │   │   ├── login/        # Login endpoint
-│   │   │   ├── signup/       # Signup endpoint
-│   │   │   ├── logout/       # Logout endpoint
-│   │   │   └── refresh/      # Token refresh endpoint
-│   │   ├── csrf-token/       # CSRF token endpoint
-│   │   └── payment/          # Payment processing
-│   ├── admin/                # Admin dashboard
-│   ├── basket/               # Shopping cart page
-│   ├── product/              # Product detail page
-│   └── search/               # Search results page
-├── components/              # React components
-│   ├── auth/                 # Authentication components
-│   ├── ui/                   # Reusable UI components
-│   └── ...                   # Other components
-├── lib/                      # Utility libraries
-│   ├── auth/                 # Authentication utilities
-│   │   ├── cookies.ts        # Cookie management
-│   │   ├── db.ts             # Database operations
-│   │   ├── jwt.ts            # JWT token handling
-│   │   ├── password.ts       # Password hashing
-│   │   └── middleware.ts    # Auth middleware
-│   ├── security/             # Security utilities
-│   │   ├── csrf.ts           # CSRF protection
-│   │   ├── csrfClient.ts     # Client-side CSRF
-│   │   ├── rateLimit.ts      # Rate limiting
-│   │   └── validation.ts    # Input validation
-│   ├── supabase/             # Supabase client
-│   └── ...                   # Other utilities
-├── store/                    # Zustand state management
-├── typings/                  # TypeScript type definitions
-├── middleware.ts             # Next.js middleware (security)
-├── package.json              # Dependencies
-└── README.md                 # This file
-```
 
 ## 🔒 Security Implementation
 
